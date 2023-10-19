@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "dependencies": {
+    "akai-apc-mini-mk2": "file:../akai-apc-mini-mk2",
+    "chroma-js": "^2.4.2",
+    "vitepress": "^1.0.0-rc.22"
+  },
+  "devDependencies": {
+    "sass": "^1.69.4"
+  }
+}
