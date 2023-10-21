@@ -5,10 +5,33 @@ html {
 body {
     font-family: Arial, Helvetica;
     margin: 0;
-
 }
 
 #app {
-
 }
 
+// theme colors
+:root {
+    --base: hsl(207, 10%, 18%);
+    --base-text: hsl(0, 0%, 99%);
+
+    --alt-bg-1: #7a5050;
+    --alt-bg-2: #507a67;
+    --alt-bg-3: #50767a;
+
+    --base-text-intense: hsl(0, 0%, 100%);
+
+    --base-faint: hsl(207, 10%, 21%);
+    --base-1: hsl(207, 10%, 23%);
+    --base-2: hsl(207, 10%, 28%);
+    --base-3: hsl(207, 10%, 33%);
+    --base-4: hsl(207, 10%, 38%);
+    --base-5: hsl(207, 10%, 43%);
+    --base-6: hsl(207, 10%, 48%);
+    --base-7: hsl(207, 10%, 53%);
+    --base-8: hsl(207, 10%, 58%);
+
+    --border: hsl(207, 10%, 28%);
+    --border-1: hsl(207, 10%, 33%);
+    --border-2: hsl(207, 10%, 38%);
+}
