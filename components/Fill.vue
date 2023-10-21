@@ -6,7 +6,7 @@
     import utils from "./utils.js";
 
     export default {
-        name: "Paint",
+        name: "Fill",
         data() {
             return {
                 sortedColors: [],
@@ -111,7 +111,7 @@
 
                         let maxHue = 360 - 360 / (steps + 1);
 
-                        let color = chroma.hsl(intensity * maxHue, 1, lightness);
+                        let color = chroma.hsl(intensity * maxHue, 1, (this.mk2.fader0 / 127) * 0.5);
                         //let color = chroma.hsl(hue, 1, intensity * 0.5);
 
                         padColors.push([idx, idx, color.hex()]);
@@ -152,7 +152,6 @@
         },
 
         beforeUnmount() {
-            console.log("zzzzzzzzzz unmoounting");
             this.mk2.disconnect();
             this.animate = false;
         },

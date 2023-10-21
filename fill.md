@@ -3,6 +3,6 @@ title: Use sysex to specify exact RGBs instead or relying on the 128 provided co
 ---
 
 <script setup>
-import Paint from './components/Paint.vue'
+import Fill from './components/Fill.vue'
 </script>
-<Paint />
+<Fill />
