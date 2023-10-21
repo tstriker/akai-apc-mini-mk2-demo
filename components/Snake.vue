@@ -86,7 +86,7 @@
 
                 this.fruit = [x, y];
                 this.fruitColor = randint(127) + 1;
-                this.mk2[`pad${x}${y}`] = [this.fruitColor, 7];
+                this.mk2[`pad${x}${y}`] = [this.fruitColor, 10];
             },
         },
 
