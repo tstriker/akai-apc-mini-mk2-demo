@@ -2,80 +2,11 @@
     import chroma from "chroma-js";
 
     import APCMiniMk2 from "akai-apc-mini-mk2";
-    import {Colors} from "akai-apc-mini-mk2";
 
     import utils from "./utils.js";
 
-    let palettes = {
-        vibrant: [21, 53, 77, 113, 96, 45, 64, 5],
-        shades: {
-            white: [3, 118, 1],
-            lightBlue: [91, 92, 103],
-            amber: [96, 62, 11],
-            olive: [13, 14, 15],
-            green: [17, 18, 23],
-            teal: [33, 34, 31],
-            purple: [52, 54, 55],
-            red: [5, 6, 7],
-        },
-    };
-
-    let namedColors = {
-        white: 8,
-        red: 5,
-        orange: 9,
-        lightGreen: 13,
-        green: 17,
-        darkerGreen: 21,
-        teal: 33,
-        lightBlue: 37,
-        blue: 41,
-        deepBlue: 45,
-        purple: 49,
-        richPurple: 53,
-        pink: 57,
-        darkOrange: 60,
-        yellow: 61,
-    };
-
-    let primaryTertiary = {
-        red: 5,
-        redViolet: 57,
-        violet: 53,
-        blueViolet: 80,
-        blue: 41,
-        blueGreen: 33,
-        green: 21,
-        yellowGreen: 74,
-        yellow: 109,
-        yellowOrange: 96,
-        orange: 84,
-        redOrange: 60,
-    };
-
-    let allColors = {};
-    Colors.forEach((color, idx) => {
-        // dedupe colors
-        if (allColors[color] == undefined) {
-            let chromaColor = chroma(color);
-            allColors[color] = {
-                color,
-                hsl: chromaColor.hsl(),
-                idx,
-                contrast: chromaColor.luminance() > 0.5 ? "#000" : "#fff",
-            };
-        }
-    });
-    allColors = Object.values(allColors);
-
-    allColors = utils.sort(allColors, color => {
-        let hue = color.hsl[0] || 0;
-        return [hue, color.hsl[1], -color.hsl[2]];
-        //return color.lch;
-    });
-
     export default {
-        name: "Palette",
+        name: "Paint",
         data() {
             return {
                 sortedColors: [],
@@ -94,8 +25,7 @@
                     return {idx: i, x, y, color: "#000000", colorIdx: 0};
                 }),
 
-                allColors: allColors,
-                byIdx: Object.fromEntries(allColors.map(col => [col.idx, col])),
+                animate: false,
             };
         },
 
@@ -134,7 +64,7 @@
                     block.color = "#000";
                     block.colorIdx = 0;
                     block.contrast = "#fff";
-                    this.mk2[block.idx] = 0;
+                    mk2[block.idx] = 0;
                 });
             },
 
@@ -157,49 +87,14 @@
                 }
             },
 
-            onDocumentKeyDown(evt) {
-                let key = evt.key;
-                if (!this.currentBlock) {
-                    return;
-                }
-
-                let nextColor = direction => {
-                    let idx = this.allColors.indexOf(this.currentColor);
-                    idx = Math.max(0, Math.min(this.allColors.length - 1, idx + direction));
-                    this.setColor(this.allColors[idx]);
-                };
-
-                let move = direction => {
-                    let blockIdx = this.colorgrid.indexOf(this.currentBlock);
-                    blockIdx = Math.max(0, Math.min(this.colorgrid.length - 1, blockIdx + direction));
-                    this.selectBlock(this.colorgrid[blockIdx]);
-                };
-
-                let handlers = {
-                    Backspace: () => {
-                        this.setColor({});
-                    },
-                    "[": () => nextColor(-1),
-                    "]": () => nextColor(1),
-                    ArrowUp: () => move(-8),
-                    ArrowDown: () => move(8),
-                    ArrowLeft: () => move(-1),
-                    ArrowRight: () => move(1),
-                };
-                if (handlers[key]) {
-                    evt.preventDefault();
-                    handlers[key]();
-                } else {
-                    console.log(key);
-                }
-            },
-
             async sendColors() {
                 let lightness = 0.5;
                 let direction = -0.005;
                 let hue = 0;
 
                 let a = 0;
+
+                let scale = 16;
 
                 let inner = async () => {
                     let padColors = [];
@@ -208,7 +103,11 @@
                         let x = idx % 8;
                         let y = 7 - Math.trunc(idx / 8);
 
-                        let intensity = ((x + y + a) % 14) / 14; // ((x + a) % 64) / 64;
+                        let xc = Math.abs(3.5 - x);
+                        let yc = Math.abs(3.5 - y);
+
+                        let intensity = xc + yc + a; // ((x + a) % 64) / 64;
+                        intensity = (intensity % scale) / scale;
 
                         let maxHue = 360 - 360 / (steps + 1);
 
@@ -218,18 +117,20 @@
                         padColors.push([idx, idx, color.hex()]);
                     }
 
-                    await this.mk2.paint(padColors);
+                    await this.mk2.fill(padColors);
 
-                    // lightness += direction;
-                    // if (lightness < 0.1 || lightness > 0.5) {
-                    //     lightness = Math.min(Math.max(lightness, 0), 0.5);
-                    //     direction = -direction;
-                    // }
-                    hue = (hue + 0.1) % 360;
+                    if (this.animate) {
+                        // lightness += direction;
+                        // if (lightness < 0.1 || lightness > 0.5) {
+                        //     lightness = Math.min(Math.max(lightness, 0), 0.5);
+                        //     direction = -direction;
+                        // }
+                        hue = (hue + 0.1) % 360;
 
-                    a = a + 0.05;
+                        a = a + 0.05;
 
-                    setTimeout(inner, 0);
+                        requestAnimationFrame(inner);
+                    }
                 };
 
                 inner();
@@ -242,28 +143,67 @@
             this.mk2 = new APCMiniMk2();
             await this.mk2.connect({sysex: true});
 
-            this.mk2.addEventListener("noteon", evt => {
-                if (evt.key == "volume") {
-                    this.mk2.reset();
-                }
-            });
+            // Object.values(palettes.shades).forEach((row, idx) => {
+            //     this.fillColors(7 - idx, 0, row, true);
+            // });
 
-            Object.values(palettes.shades).forEach((row, idx) => {
-                this.fillColors(7 - idx, 0, row, true);
-            });
-
-            document.addEventListener("keydown", this.onDocumentKeyDown);
+            this.animate = true;
+            this.sendColors();
         },
 
         beforeUnmount() {
+            console.log("zzzzzzzzzz unmoounting");
             this.mk2.disconnect();
-            document.removeEventListener("keydown", this.onDocumentKeyDown);
+            this.animate = false;
         },
     };
 </script>
 
 <template>
-    <div class="page paint"></div>
+    <div class="page palette">
+        <a href="/">hooome</a>
+
+        <div class="colors">
+            <button
+                class="block"
+                v-for="block in colorgrid"
+                :key="block.idx"
+                @click="selectBlock(block)"
+                :style="{background: block.color, color: block.contrast}"
+                :class="{current: currentBlock == block}"
+            >
+                {{ block.colorIdx || "" }}
+            </button>
+        </div>
+
+        <div class="kbd-instructions">
+            <kbd v-for="key in ['←', '→', '↑', '↓', '[', ']', 'Backspace']" :key="key">
+                {{ key }}
+            </kbd>
+        </div>
+
+        <div class="block-edit" v-if="currentBlock">
+            <div class="same-line">
+                <div class="colorpicker">
+                    <button
+                        v-for="color in allColors"
+                        :key="color.idx"
+                        :style="{background: color.color, color: color.contrast}"
+                        :class="{current: color == currentColor}"
+                        @mousedown="onColorMouseDown(color)"
+                        @mouseover="setColor(color, $event)"
+                    >
+                        {{ color.idx }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button @click="resetColors">Reset</button>
+            <button @click="dumpColors">Dump Colors</button>
+        </div>
+    </div>
 </template>
 
 <style lang="scss">
