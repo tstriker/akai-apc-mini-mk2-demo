@@ -160,8 +160,6 @@
 
 <template>
     <div class="page palette">
-        <a href="/">hooome</a>
-
         <div class="colors">
             <button
                 class="block"
@@ -207,16 +205,6 @@
 
 <style lang="scss">
     .page.palette {
-        background: #222;
-        color: #fff;
-        position: fixed;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        padding: 1em;
-        overflow-y: auto;
-
         display: grid;
         gap: 1em;
         align-content: start;

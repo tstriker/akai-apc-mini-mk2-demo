@@ -1,27 +1,61 @@
 <script setup>
-    import {useData} from "vitepress";
-
     // https://vitepress.dev/reference/runtime-api#usedata
+    import {useData} from "vitepress";
     const {site, frontmatter} = useData();
+</script>
+
+<script>
+    import {markRaw} from "vue";
+    import APCMiniMk2 from "akai-apc-mini-mk2";
+    import chroma from "chroma-js";
+    import utils from "../../components/utils.js";
+
+    export default {
+        name: "LayoutBase",
+        data() {
+            return {
+                ready: false,
+            };
+        },
+
+        mounted() {},
+    };
 </script>
 
 <template>
     <div class="page-container">
-        <template v-if="frontmatter.home">
-            <h1>{{ site.title }}</h1>
-            <p>{{ site.description }}</p>
-            <ul>
-                <li><a href="/snake.html">Snake</a></li>
-                <li><a href="/palette.html">Palette</a></li>
-            </ul>
-        </template>
-        <template v-else>
-            <Content />
-        </template>
+        <h1>{{ site.title }}</h1>
+
+        <div class="links">
+            <a href="/palette.html">Palette</a>
+            <a href="/fill.html">Fill</a>
+            <a href="/rain.html">Rain</a>
+        </div>
+
+        <Content />
     </div>
 </template>
 
 <style lang="scss">
     .page-container {
+        background: #222;
+        color: #fff;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 1em;
+        overflow-y: auto;
+
+        .links {
+            display: flex;
+            gap: 1em;
+            margin: 1em 0;
+        }
+
+        a {
+            color: aqua;
+        }
     }
 </style>
