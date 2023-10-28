@@ -118,7 +118,7 @@
                     let xCurrent = x + (vertical ? 0 : idx);
                     let yCurrent = y + (vertical ? idx : 0);
 
-                    this.mk2[`pad${xCurrent}${yCurrent}`] = [colorIdx, 6];
+                    this.mk2[`pad${xCurrent}${yCurrent}`].color = [colorIdx, 6];
                     let color = this.byIdx[colorIdx];
                     let block = this.colorgrid[yCurrent * 8 + xCurrent];
 
@@ -126,15 +126,6 @@
                     block.colorIdx = color.idx;
                     block.color = color.color;
                     block.contrast = color.contrast;
-                });
-            },
-
-            resetColors() {
-                this.colorgrid.forEach(block => {
-                    block.color = "#000";
-                    block.colorIdx = 0;
-                    block.contrast = "#fff";
-                    this.mk2[block.idx] = 0;
                 });
             },
 
@@ -202,7 +193,6 @@
                 let a = 0;
 
                 let inner = async () => {
-                    let padColors = [];
                     let steps = 64;
                     for (let idx = 0; idx < steps; idx++) {
                         let x = idx % 8;
@@ -215,10 +205,8 @@
                         let color = chroma.hsl(intensity * maxHue, 1, lightness);
                         //let color = chroma.hsl(hue, 1, intensity * 0.5);
 
-                        padColors.push([idx, idx, color.hex()]);
+                        this.mk2.buttons[idx] = color.hex();
                     }
-
-                    await this.mk2.paint(padColors);
 
                     // lightness += direction;
                     // if (lightness < 0.1 || lightness > 0.5) {
@@ -233,8 +221,6 @@
                 };
 
                 inner();
-
-                //this.mk2.pad33 = "#770000";
             },
         },
 
@@ -242,7 +228,7 @@
             this.mk2 = new APCMiniMk2();
             await this.mk2.connect({sysex: true});
 
-            this.mk2.addEventListener("noteon", evt => {
+            document.addEventListener("noteon", evt => {
                 if (evt.key == "volume") {
                     this.mk2.reset();
                 }

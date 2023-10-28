@@ -1,5 +1,5 @@
 ---
-title: Use sysex to specify exact RGBs instead or relying on the 128 provided colors
+title: Colors!
 ---
 
 <script setup>

@@ -5,9 +5,52 @@
 
     import utils from "./utils.js";
 
+    import * as conversions from "./colorconversion.js";
+
+    function toHex(h, s, l) {
+        let oklab = _okhslToOklab(h / 360, s / 100, l / 100);
+        return chroma.oklab(...oklab).hex();
+    }
+
+    function toHSL(color) {
+        let [h, s, l] = conversions.srgb_to_okhsl(...chroma(color).rgb());
+        return [h * 360, s * 100, l * 100];
+    }
+
+    function _okhslToOklab(h, s, l) {
+        if (l == 1) {
+            return [1, 0, 0];
+        } else if (l == 0) {
+            return [0, 0, 0];
+        }
+        const srgb = conversions.okhsl_to_srgb(h, s, l);
+        const rgb = srgb.map(v => conversions.srgb_transfer_function_inv(v / 255));
+        return conversions.linear_srgb_to_oklab(...rgb);
+    }
+
+    function getGradients(hue, saturation, lightness) {
+        // `linear-gradient(to right, ${stops})`
+        return {
+            hue: new Array(16).fill(String()).map((_v, i) => {
+                return toHex((i / 15) * 360, saturation, lightness);
+            }),
+
+            lightness: new Array(16).fill(String()).map((_v, i) => {
+                return toHex(hue, saturation || 1, (i / 15) * 100);
+            }),
+
+            saturation: new Array(16).fill(String()).map((_v, i) => {
+                return toHex(hue, (i / 15) * 100, lightness);
+            }),
+        };
+    }
+
     export default {
         name: "Fill",
         data() {
+            let hueStops = getGradients(0, 100, 50).hue;
+            console.log("ffff", hueStops);
+
             return {
                 sortedColors: [],
                 selectedColors: [],
@@ -18,6 +61,8 @@
                 mk2: null,
 
                 mousedown: false,
+
+                okLab: chroma.scale(hueStops),
 
                 colorgrid: utils.range(64).map(i => {
                     let x = i % 8;
@@ -87,55 +132,104 @@
                 }
             },
 
-            async sendColors() {
-                let lightness = 0.5;
-                let direction = -0.005;
-                let hue = 0;
+            diamond(state) {
+                let padColors = [];
+                let steps = 64;
 
-                let a = 0;
+                let originX = 3.5; //Math.round(25 - (this.mk2.fader0.value / 127) * 50) + 0.5;
+                let originY = 3.5; //Math.round(25 - (this.mk2.fader1.value / 127) * 50) + 0.5;
+                let zoom = 16; // this.mk2.fader2.value + 1;
 
-                let scale = 16;
+                state.a = state.a || 0;
+
+                for (let idx = 0; idx < steps; idx++) {
+                    let x = idx % 8;
+                    let y = 7 - Math.trunc(idx / 8);
+
+                    let xc = Math.abs(originX - x);
+                    let yc = Math.abs(originY - y);
+
+                    let intensity = xc + yc + state.a; // ((x + a) % 64) / 64;
+                    intensity = (intensity % zoom) / zoom;
+
+                    let maxHue = 360 - 360 / (steps + 1);
+
+                    let color = chroma.hsl(intensity * maxHue, 1, (Math.max(this.mk2.fader8.value, 3) / 127) * 0.5);
+
+                    padColors.push(color.hex());
+                }
+
+                state.a = state.a + 0.05;
+
+                return padColors;
+            },
+
+            radial(state) {
+                let padColors = [];
+                let steps = 64;
+
+                let originX = 3.5; //Math.round(25 - (this.mk2.fader0.value / 127) * 50) + 0.5;
+                let originY = 3.5; //Math.round(25 - (this.mk2.fader1.value / 127) * 50) + 0.5;
+
+                state.a = state.a || 0;
+
+                let zoom = 2;
+
+
+                for (let idx = 0; idx < steps; idx++) {
+                    let x = idx % 8;
+                    let y = 7 - Math.trunc(idx / 8);
+
+                    let xc = originX - x;
+                    let yc = originY - y;
+
+                    let angle = (Math.atan2(xc, yc) * 180) / Math.PI;
+                    angle = (angle + state.a) % 360;
+
+                    let size = (xc * xc + yc * yc) / (Math.pow(3.7, 2) * zoom);
+
+                    let color = chroma.hsl(angle, 1, (1 - Math.pow(size, 0.3)) * 0.9);
+
+                    padColors.push(color.hex());
+                }
+
+                state.a = state.a + 1;
+                //state.animate = false;
+
+                return padColors;
+            },
+
+            allColors(state) {
+                let padColors = [];
+                let steps = 64;
+
+                for (let idx = 0; idx < steps; idx++) {
+                    let hue = (360 * idx) / steps;
+                    let color = chroma.hsl(hue, 1, 0.5);
+                    //let color = this.okLab(hue / 360);
+
+                    padColors.push(color.hex());
+                }
+
+                state.a = state.a + 0.05;
+
+                return padColors;
+            },
+
+            sendColors() {
+                let state = {animate: true};
 
                 let inner = async () => {
-                    let padColors = [];
-                    let steps = 64;
-                    for (let idx = 0; idx < steps; idx++) {
-                        let x = idx % 8;
-                        let y = 7 - Math.trunc(idx / 8);
+                    let padColors = this.radial(state);
+                    padColors.forEach((color, idx) => {
+                        this.mk2.buttons[idx].color = color;
+                    });
 
-                        let xc = Math.abs(3.5 - x);
-                        let yc = Math.abs(3.5 - y);
-
-                        let intensity = xc + yc + a; // ((x + a) % 64) / 64;
-                        intensity = (intensity % scale) / scale;
-
-                        let maxHue = 360 - 360 / (steps + 1);
-
-                        let color = chroma.hsl(intensity * maxHue, 1, (this.mk2.fader0 / 127) * 0.5);
-                        //let color = chroma.hsl(hue, 1, intensity * 0.5);
-
-                        padColors.push([idx, idx, color.hex()]);
-                    }
-
-                    await this.mk2.fill(padColors);
-
-                    if (this.animate) {
-                        // lightness += direction;
-                        // if (lightness < 0.1 || lightness > 0.5) {
-                        //     lightness = Math.min(Math.max(lightness, 0), 0.5);
-                        //     direction = -direction;
-                        // }
-                        hue = (hue + 0.1) % 360;
-
-                        a = a + 0.05;
-
+                    if (this.animate && state.animate) {
                         requestAnimationFrame(inner);
                     }
                 };
-
                 inner();
-
-                //this.mk2.pad33 = "#770000";
             },
         },
 

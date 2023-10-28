@@ -22,7 +22,7 @@
                 snake: [[4, 4]],
                 head: [4, 4],
                 snakeLength: 2,
-                snakeColor: 3,
+                snakeColor: "#ffffff",
                 fruitColor: null,
                 fruit: null,
 
@@ -51,7 +51,7 @@
                 y = (y + 8) % 8;
 
                 this.snake.push([x, y]);
-                this.mk2[`pad${x}${y}`] = this.snakeColor;
+                this.mk2[`pad${x}${y}`].color = this.snakeColor;
                 this.head = [x, y];
 
                 if (x == this.fruit[0] && y == this.fruit[1]) {
@@ -60,15 +60,16 @@
                     this.snakeColor = "#ff00ff";
                     this.placeFruit();
 
+                    //this.mk2[`pad${x}${y}`].color = 0;
                     this.snake.forEach(([x, y]) => {
-                        this.mk2[`pad${x}${y}`] = this.snakeColor;
+                        this.mk2[`pad${x}${y}`].color = this.snakeColor;
                     });
                 }
 
                 if (this.snake.length > this.snakeLength) {
                     let prev = this.snake.splice(0, this.snake.length - Math.trunc(this.snakeLength));
                     prev.forEach(([x, y]) => {
-                        this.mk2[`pad${x}${y}`] = 0;
+                        this.mk2[`pad${x}${y}`].color = 0;
                     });
                 }
 
@@ -86,35 +87,38 @@
 
                 this.fruit = [x, y];
                 this.fruitColor = randint(127) + 1;
-                this.mk2[`pad${x}${y}`] = [this.fruitColor, 10];
+                this.mk2[`pad${x}${y}`].color = [this.fruitColor, 10];
             },
-        },
 
-        async mounted() {
-            this.mk2 = new APCMiniMk2();
-            await this.mk2.connect({sysex: true});
-
-            this.placeFruit();
-
-            this.snakeLoop();
-
-            this.mk2.addEventListener("noteon", evt => {
+            handleKeys(evt) {
                 let directions = {
-                    up: [0, -1],
-                    down: [0, 1],
-                    left: [-1, 0],
-                    right: [1, 0],
+                    upButton: [0, -1],
+                    downButton: [0, 1],
+                    leftButton: [-1, 0],
+                    rightButton: [1, 0],
                 };
                 let direction = directions[evt.key];
                 if (direction && (this.direction[0] + direction[0] != 0 || this.direction[1] + direction[1] != 0)) {
                     this.direction = direction;
                 }
-            });
+            },
+        },
+
+        async mounted() {
+            this.mk2 = new APCMiniMk2();
+            await this.mk2.connect({sysex: true, paintLoop: false});
+
+            this.placeFruit();
+
+            this.snakeLoop();
+
+            document.addEventListener("noteon", this.handleKeys);
         },
 
         beforeUnmount() {
             this.mk2.disconnect();
             clearTimeout(this.snakeTimeout);
+            document.removeEventListener("noteon", this.handleKeys);
         },
     };
 </script>

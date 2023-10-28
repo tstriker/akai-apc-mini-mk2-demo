@@ -65,7 +65,7 @@
 
                             let color = chroma.hsl(Math.trunc(hue), 1, intensity).hex();
                             if (y >= 0 && y <= 7) {
-                                this.mk2[`pad${x}${y}`] = color;
+                                this.mk2[`pad${x}${y}`].color = color;
                             }
                         }
                     }
@@ -75,54 +75,7 @@
                     }
                 };
 
-                //     let lightness = 0.5;
-                //     let direction = -0.005;
-                //     let hue = 0;
-
-                //     let a = 0;
-
-                //     let scale = 16;
-
-                //     let inner = async () => {
-                //         let padColors = [];
-                //         let steps = 64;
-                //         for (let idx = 0; idx < steps; idx++) {
-                //             let x = idx % 8;
-                //             let y = 7 - Math.trunc(idx / 8);
-
-                //             let xc = Math.abs(3.5 - x);
-                //             let yc = Math.abs(3.5 - y);
-
-                //             let intensity = xc + yc + a; // ((x + a) % 64) / 64;
-                //             intensity = (intensity % scale) / scale;
-
-                //             let maxHue = 360 - 360 / (steps + 1);
-
-                //             let color = chroma.hsl(intensity * maxHue, 1, (this.mk2.fader0 / 127) * 0.5);
-                //             //let color = chroma.hsl(hue, 1, intensity * 0.5);
-
-                //             padColors.push([idx, idx, color.hex()]);
-                //         }
-
-                //         await this.mk2.fill(padColors);
-
-                //         if (this.animate) {
-                //             // lightness += direction;
-                //             // if (lightness < 0.1 || lightness > 0.5) {
-                //             //     lightness = Math.min(Math.max(lightness, 0), 0.5);
-                //             //     direction = -direction;
-                //             // }
-                //             hue = (hue + 0.1) % 360;
-
-                //             a = a + 0.05;
-
-                //             requestAnimationFrame(inner);
-                //         }
-                //     };
-
                 inner();
-
-                //this.mk2.pad33 = "#770000";
             },
         },
 
