@@ -5,6 +5,7 @@
     import {Colors} from "akai-apc-mini-mk2";
 
     import utils from "./utils.js";
+    import APC from "./APC.vue";
 
     let palettes = {
         vibrant: [21, 53, 77, 113, 96, 45, 64, 5],
@@ -76,6 +77,9 @@
 
     export default {
         name: "Palette",
+        components: {
+            APC,
+        },
         data() {
             return {
                 sortedColors: [],
@@ -237,6 +241,8 @@
             Object.values(palettes.shades).forEach((row, idx) => {
                 this.fillColors(7 - idx, 0, row, true);
             });
+            this.mk2.volumeButton.toggled = true;
+            this.mk2.muteButton.toggled = true;
 
             document.addEventListener("keydown", this.onDocumentKeyDown);
         },
@@ -249,7 +255,9 @@
 </script>
 
 <template>
-    <div class="page paint"></div>
+    <div class="page palette">
+        <APC />
+    </div>
 </template>
 
 <style lang="scss">

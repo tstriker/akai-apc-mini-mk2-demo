@@ -4,6 +4,7 @@
     import APCMiniMk2 from "akai-apc-mini-mk2";
 
     import utils from "./utils.js";
+    import APC from "./APC.vue";
 
     import * as conversions from "./colorconversion.js";
 
@@ -47,6 +48,9 @@
 
     export default {
         name: "Fill",
+        components: {
+            APC,
+        },
         data() {
             let hueStops = getGradients(0, 100, 50).hue;
             console.log("ffff", hueStops);
@@ -67,7 +71,7 @@
                 colorgrid: utils.range(64).map(i => {
                     let x = i % 8;
                     let y = Math.trunc(i / 8);
-                    return {idx: i, x, y, color: "#000000", colorIdx: 0};
+                    return {idx: i, x, y, color: "#444444", colorIdx: 0};
                 }),
 
                 animate: false,
@@ -175,7 +179,6 @@
 
                 let zoom = 2;
 
-
                 for (let idx = 0; idx < steps; idx++) {
                     let x = idx % 8;
                     let y = 7 - Math.trunc(idx / 8);
@@ -215,34 +218,24 @@
 
                 return padColors;
             },
-
-            sendColors() {
-                let state = {animate: true};
-
-                let inner = async () => {
-                    let padColors = this.radial(state);
-                    padColors.forEach((color, idx) => {
-                        this.mk2.buttons[idx].color = color;
-                    });
-
-                    if (this.animate && state.animate) {
-                        requestAnimationFrame(inner);
-                    }
-                };
-                inner();
-            },
         },
 
         async mounted() {
             this.mk2 = new APCMiniMk2();
-            await this.mk2.connect({sysex: true});
 
-            // Object.values(palettes.shades).forEach((row, idx) => {
-            //     this.fillColors(7 - idx, 0, row, true);
-            // });
+            let state = {animate: true};
+
+            await this.mk2.connect({
+                sysex: true,
+                beforePaint: () => {
+                    let padColors = this.diamond(state);
+                    padColors.forEach((color, idx) => {
+                        this.mk2.buttons[idx].color = color;
+                    });
+                },
+            });
 
             this.animate = true;
-            this.sendColors();
         },
 
         beforeUnmount() {
@@ -254,46 +247,7 @@
 
 <template>
     <div class="page palette">
-        <div class="colors">
-            <button
-                class="block"
-                v-for="block in colorgrid"
-                :key="block.idx"
-                @click="selectBlock(block)"
-                :style="{background: block.color, color: block.contrast}"
-                :class="{current: currentBlock == block}"
-            >
-                {{ block.colorIdx || "" }}
-            </button>
-        </div>
-
-        <div class="kbd-instructions">
-            <kbd v-for="key in ['←', '→', '↑', '↓', '[', ']', 'Backspace']" :key="key">
-                {{ key }}
-            </kbd>
-        </div>
-
-        <div class="block-edit" v-if="currentBlock">
-            <div class="same-line">
-                <div class="colorpicker">
-                    <button
-                        v-for="color in allColors"
-                        :key="color.idx"
-                        :style="{background: color.color, color: color.contrast}"
-                        :class="{current: color == currentColor}"
-                        @mousedown="onColorMouseDown(color)"
-                        @mouseover="setColor(color, $event)"
-                    >
-                        {{ color.idx }}
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="controls">
-            <button @click="resetColors">Reset</button>
-            <button @click="dumpColors">Dump Colors</button>
-        </div>
+        <APC />
     </div>
 </template>
 
@@ -340,13 +294,34 @@
 
         .colors {
             display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 5px;
+            grid-template-columns: repeat(8, 100px);
+            gap: 8px;
+            background: #000;
+            padding: 1em;
 
             .block {
                 height: 50px;
                 border: 1px solid #444;
-                background: #000;
+                background: #eee;
+                border-radius: 2px;
+                box-shadow: 0px 1px 0 2px #555;
+                overflow: hidden;
+
+                &:nth-child(28) {
+                    border-bottom-right-radius: 12px;
+                }
+
+                &:nth-child(29) {
+                    border-bottom-left-radius: 12px;
+                }
+
+                &:nth-child(36) {
+                    border-top-right-radius: 12px;
+                }
+
+                &:nth-child(37) {
+                    border-top-left-radius: 12px;
+                }
 
                 &.current {
                     border: 1px solid #fff;
