@@ -63,11 +63,7 @@
 <template>
     <div class="apc" :style="colorStyles">
         <div class="pads">
-            <div class="pad-box" v-for="pad in pads" :key="pad.note">
-                <div class="pad-shadow" :style="{background: `var(--${pad.note})`}" />
-                <div class="pad-overlay" />
-                <button :style="{background: `var(--${pad.note})`}"></button>
-            </div>
+            <button :style="{background: `var(--${pad.note})`}" v-for="pad in pads" :key="pad.note"></button>
         </div>
 
         <div class="buttons vert">
@@ -116,55 +112,30 @@
             grid-template-columns: repeat(8, var(--pad-width));
             gap: 8px;
 
-            .pad-box {
+            button {
                 height: var(--pad-height);
-                position: relative;
+                background: #333;
+                border: none;
+                border-radius: 2px;
 
-                & > * {
-                    width: 100%;
-                    height: 100%;
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    border-radius: 2px;
-
-                    &.pad-overlay {
-                        background: #000;
-                        opacity: 0.4;
-                    }
-
-                    &.pad-overlay,
-                    &.pad-shadow {
-                        top: 0;
-                        left: 0;
-                        height: calc(100% + 3px);
-                        width: calc(100% + 3px);
-                    }
+                &:nth-child(28) {
+                    border-bottom-right-radius: 12px;
                 }
 
-                button {
-                    background: #333;
-                    border: none;
+                &:nth-child(29) {
+                    border-bottom-left-radius: 12px;
+                }
 
-                    &:nth-child(28) {
-                        border-bottom-right-radius: 12px;
-                    }
+                &:nth-child(36) {
+                    border-top-right-radius: 12px;
+                }
 
-                    &:nth-child(29) {
-                        border-bottom-left-radius: 12px;
-                    }
+                &:nth-child(37) {
+                    border-top-left-radius: 12px;
+                }
 
-                    &:nth-child(36) {
-                        border-top-right-radius: 12px;
-                    }
-
-                    &:nth-child(37) {
-                        border-top-left-radius: 12px;
-                    }
-
-                    &.current {
-                        border: 1px solid #fff;
-                    }
+                &.current {
+                    border: 1px solid #fff;
                 }
             }
         }
