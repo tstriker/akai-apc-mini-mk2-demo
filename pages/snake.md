@@ -3,7 +3,7 @@ title: Snak
 ---
 
 <script setup>
-import Snake from './components/Snake.vue'
+import Snake from '../src/Snake.vue'
 </script>
 
 <Snake />

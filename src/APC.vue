@@ -117,6 +117,7 @@
                 background: #333;
                 border: none;
                 border-radius: 2px;
+                box-shadow: 1px 1px 0 2px #333;
 
                 &:nth-child(28) {
                     border-bottom-right-radius: 12px;

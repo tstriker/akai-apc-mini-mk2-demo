@@ -3,6 +3,6 @@ title: Use sysex to specify exact RGBs instead or relying on the 128 provided co
 ---
 
 <script setup>
-import Rain from './components/Rain.vue'
+import Rain from '../src/Rain.vue'
 </script>
 <Rain />

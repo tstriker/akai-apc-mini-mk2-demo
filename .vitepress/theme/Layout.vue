@@ -5,11 +5,6 @@
 </script>
 
 <script>
-    import {markRaw} from "vue";
-    import APCMiniMk2 from "akai-apc-mini-mk2";
-    import chroma from "chroma-js";
-    import utils from "../../components/utils.js";
-
     export default {
         name: "LayoutBase",
         data() {

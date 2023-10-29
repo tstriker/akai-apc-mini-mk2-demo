@@ -93,13 +93,13 @@
 </script>
 
 <template>
-    <div class="page palette">
+    <div class="page rain">
         <APC />
     </div>
 </template>
 
 <style lang="scss">
-    .page.palette {
+    .page.rain {
         display: grid;
         gap: 1em;
         align-content: start;

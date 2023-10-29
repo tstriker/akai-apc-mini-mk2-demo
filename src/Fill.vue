@@ -246,13 +246,13 @@
 </script>
 
 <template>
-    <div class="page palette">
+    <div class="page fill">
         <APC />
     </div>
 </template>
 
 <style lang="scss">
-    .page.palette {
+    .page.fill {
         display: grid;
         gap: 1em;
         align-content: start;

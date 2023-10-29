@@ -294,13 +294,6 @@
             }
         }
 
-        button {
-            background: none;
-            border: none;
-            color: #fff;
-            cursor: pointer;
-        }
-
         .colors {
             display: grid;
             grid-template-columns: repeat(8, 1fr);

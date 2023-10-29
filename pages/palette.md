@@ -3,6 +3,6 @@ title: Fill Colors etc
 ---
 
 <script setup>
-import Palette from './components/Palette.vue'
+import Palette from '../src/Palette.vue'
 </script>
 <Palette />
