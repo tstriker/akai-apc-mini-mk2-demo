@@ -158,7 +158,11 @@
 
                     let maxHue = 360 - 360 / (steps + 1);
 
-                    let color = chroma.hsl(intensity * maxHue, 1, (Math.max(this.mk2.fader8.value, 3) / 127) * 0.5);
+                    let color = chroma.hsl(
+                        intensity * maxHue,
+                        1,
+                        0.5 - (Math.max(this.mk2.fader8.value, 3) / 127) * 0.5
+                    );
 
                     padColors.push(color.hex());
                 }
