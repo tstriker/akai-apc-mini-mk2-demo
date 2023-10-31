@@ -6,173 +6,7 @@
 
     import utils from "./utils.js";
     import APC from "./APC.vue";
-
-    let pixelKey = (x, y) => `${x},${y}`;
-
-    class Sprite {
-        constructor(x, y) {
-            [this.x, this.y] = [x, y];
-        }
-
-        getPixels() {
-            throw Error("define me!");
-        }
-    }
-
-    class Rect extends Sprite {
-        constructor(x, y, width, height, color) {
-            super(x, y);
-            [this.width, this.height, this.color] = [width, height, color];
-        }
-
-        getPixels() {
-            let pixels = {};
-            for (let y = this.y; y < this.y + this.height; y++) {
-                for (let x = this.x; x < this.x + this.width; x++) {
-                    pixels[pixelKey(x, y)] = this.color;
-                }
-            }
-            return pixels;
-        }
-    }
-
-    // letters, vertical line by line in base 36
-    // `parseInt("01110", 2).toString(36)` --> 'e'
-    let letters = {
-        A: "fkf",
-        B: "vla",
-        C: "vhh",
-        D: "vhe",
-        E: "vl",
-        F: "vkg",
-        G: "vhl7",
-        H: "v4v",
-        I: "v",
-        J: "3hv",
-        K: "v4r",
-        L: "v1",
-        M: "v848v",
-        N: "vgf",
-        O: "ehe",
-        P: "vkks",
-        Q: "uiju",
-        R: "vkb",
-        S: "tln",
-        T: "gvg",
-        U: "v1v",
-        V: "u1u",
-        W: "s343s",
-        X: "r4r",
-        Y: "o7o",
-        Z: "jip",
-        0: "ehe",
-        1: "8v",
-        2: "nt",
-        3: "lv",
-        4: "s4v",
-        5: "tn",
-        6: "vln",
-        7: "gno",
-        8: "vlv",
-        9: "tlv",
-        "!": "t",
-        "?": "gl8",
-        "\\": "o43",
-        '"': "o0o",
-        "#": "lvlvl",
-        "&": "",
-        "(": "eh",
-        ")": "he",
-        "[": "vh",
-        "]": "hv",
-        "-": "44",
-        "+": "4e4",
-        "*": "a4a",
-        ":": "a",
-        "'": "o",
-    };
-
-    class Text extends Sprite {
-        constructor(x, y, text, color = "#ffffff") {
-            super(x, y);
-            [this.text, this.color] = [text, color];
-
-            this.height = 5;
-            this.width = 0;
-            this._redraw();
-        }
-
-        _redraw() {
-            let [x, y] = [0, 0];
-            let pixels = {};
-            for (let letter of this.text.toUpperCase()) {
-                let lines = letters[letter] || [];
-                for (let line of lines) {
-                    let bytes = parseInt(line, 36).toString(2).padStart(5, "0");
-                    for (let byte of bytes) {
-                        if (byte != "0") {
-                            pixels[pixelKey(x, y)] = this.color;
-                        }
-                        y += 1;
-                    }
-                    x += 1;
-                    y = 0;
-                }
-
-                // add whitespace after each letter because we are polite
-                x += 1;
-            }
-            this._pixels = pixels;
-            this.width = x;
-        }
-
-        getPixels() {
-            return this._pixels;
-        }
-    }
-
-    class PixelCanvas {
-        constructor({x, y, width, height, bg}) {
-            this.x = x || 0;
-            this.y = y || 0;
-            this.width = width || 8;
-            this.height = height || 8;
-            this.bg = bg || "#000000";
-            this.sprites = [];
-        }
-
-        addChild(sprite) {
-            this.sprites.push(sprite);
-        }
-
-        getPixels() {
-            // gets colors for all sprites and then returns the full canvas
-            // we do not do transparency as we need to clean up
-            let pixelBoard = {};
-            for (let x = 0; x < this.width; x++) {
-                pixelBoard[x] = {};
-            }
-
-            for (let sprite of this.sprites) {
-                Object.entries(sprite.getPixels()).forEach(([key, color]) => {
-                    let [x, y] = key.split(",");
-                    [x, y] = [Math.round(parseInt(x) + sprite.x), Math.round(parseInt(y) + sprite.y)];
-                    if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
-                        pixelBoard[x][y] = color;
-                    }
-                });
-            }
-
-            let pixels = [];
-            for (let y = 0; y < this.height; y++) {
-                for (let x = 0; x < this.width; x++) {
-                    pixels.push({x: x + this.x, y: y + this.y, color: pixelBoard[x][y] || this.bg});
-                }
-            }
-            pixels = pixels.filter(p => p.x >= 0 && p.x < 8 && p.y >= 0 && p.y <= 7);
-            return pixels;
-        }
-    }
+    import * as graphics from "./graphics.js";
 
     // this obviously works - finish it after you're done with the canvas
     class APCHandler {
@@ -341,6 +175,8 @@
 
                 allColors: allColors,
                 byIdx: Object.fromEntries(allColors.map(col => [col.idx, col])),
+
+                direction: 0,
             };
         },
 
@@ -439,36 +275,53 @@
                     if (this.canvas.x == 4) {
                         this.canvas.x = 0;
                         this.canvas.width = 8;
+                        this.canvas.bg.width = 8;
                         this.mk2.panButton.toggled = true;
                     } else {
                         this.canvas.x = 4;
                         this.canvas.width = 4;
+                        this.canvas.bg.width = 4;
                         this.mk2.panButton.toggled = false;
 
                         this.mk2.select(0, 2, 3, 7).forEach(pad => {
                             pad.color = 0;
                         });
                     }
+                } else if (evt.key == "fader0") {
+                    this.direction = (evt.value / 127 - 0.5) * 0.5;
                 }
             },
         },
 
         async mounted() {
-            this.canvas = new PixelCanvas({x: 4, y: 1, width: 4, height: 7, bg: "#110011"});
-            let message = "[?]??what???";
-            //message = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
-            this.label = new Text(4, 1, message);
+            let bananas = {};
+            let p = graphics.Point(23, 45);
+            bananas[p] = "red";
+            console.log("ttt", bananas);
+
+            this.canvas = new graphics.PixelCanvas({x: 0, y: 0, width: 8, height: 8, bg: 0});
+
+            this.label = new graphics.Sprite(1, 2);
+
+            this.label.addChild(new graphics.Text(0, 0, "R", "#ff0000"));
+            this.label.addChild(new graphics.Text(this.label.maxX + 2, 0, "G", "#00ff00"));
+            this.label.addChild(new graphics.Text(this.label.maxX + 2, 0, "B", "#0000ff"));
+            this.label.addChild(new graphics.Text(this.label.maxX + 4, 0, "Monster", "#ffffff"));
+
             this.canvas.addChild(this.label);
 
             this.mk2 = new APCMiniMk2();
             await this.mk2.connect({
                 sysex: true,
                 beforePaint: () => {
-                    this.label.x -= 0.1;
-                    if (-this.label.x > this.label.width) {
-                        this.label.x = 8;
+                    this.label.x += this.direction;
+                    if (this.direction < 0 && this.label.x < -this.label.maxX - 2) {
+                        this.label.x = 10;
+                    } else if (this.direction > 0 && this.label.x > 10) {
+                        this.label.x = -this.label.maxX - 2;
                     }
-                    for (let pixel of this.canvas.getPixels()) {
+
+                    for (let pixel of this.canvas.getAllPixels()) {
                         this.mk2.pads(pixel.x, pixel.y).color = pixel.color;
                     }
                 },
@@ -478,10 +331,11 @@
             mk2Handler.go("paletteBrowser");
 
             document.addEventListener("noteon", this.handleAPC);
+            document.addEventListener("cc", this.handleAPC);
 
-            Object.values(palettes.shades).forEach((row, idx) => {
-                this.fillColors(7 - idx, 0, row, true);
-            });
+            // Object.values(palettes.shades).forEach((row, idx) => {
+            //     this.fillColors(7 - idx, 0, row, true);
+            // });
             this.mk2.volumeButton.toggled = true;
             this.mk2.muteButton.toggled = true;
 
@@ -494,6 +348,7 @@
             mk2Handler.detach();
 
             document.removeEventListener("noteon", this.handleAPC);
+            document.removeEventListener("cc", this.handleAPC);
             document.removeEventListener("keydown", this.onDocumentKeyDown);
         },
     };
