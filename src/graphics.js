@@ -1,49 +1,37 @@
-let pixelKey = (x, y) => `${x},${y}`;
-
-class _Point {
-    constructor(x, y) {
-        [this.x, this.y] = [x, y];
-    }
-
-    toString() {
-        return `${Math.trunc(this.x)},${Math.trunc(this.y)}`;
-    }
-}
-export const Point = (x, y) => new _Point(x, y);
-
 export class Sprite {
     constructor(x, y) {
         [this.x, this.y] = [x, y];
         this.sprites = [];
     }
 
-    addChild(sprite) {
-        this.sprites.push(sprite);
+    addChild(...sprites) {
+        this.sprites.push(...sprites);
     }
 
     getPixels() {
-        // define me
+        // override this func to draw stuff
         return [];
     }
 
     getAllPixels() {
         let pixelBoard = {};
+        let key = (x, y) => `${Math.round(x)},${Math.round(y)}`;
         for (let pixel of this.getPixels()) {
-            pixelBoard[pixelKey(pixel.x, pixel.y)] = pixel;
+            pixelBoard[key(pixel.x, pixel.y)] = pixel;
         }
 
         for (let sprite of this.sprites) {
             sprite.getAllPixels().forEach(pixel => {
-                let [x, y] = [Math.round(sprite.x + pixel.x), Math.round(sprite.y + pixel.y)];
-                pixelBoard[pixelKey(x, y)] = {x, y, color: pixel.color};
+                let [x, y] = [sprite.x + pixel.x, sprite.y + pixel.y];
+                pixelBoard[key(x, y)] = {x, y, color: pixel.color};
             });
         }
         return Object.values(pixelBoard);
     }
 
-    get maxX() {
+    get bounds() {
         let pixels = this.getAllPixels();
-        return Math.max(...pixels.map(p => p.x));
+        return {x: Math.max(...pixels.map(p => p.x)), y: Math.max(...pixels.map(p => p.y))};
     }
 
     fillRect(x, y, w, h, color) {
@@ -57,38 +45,35 @@ export class Sprite {
     }
 }
 
-export class PixelCanvas extends Sprite {
-    constructor({x, y, width, height, bg}) {
+export class Scene extends Sprite {
+    constructor({x = 0, y = 0, width = 8, height = 8, bg = 0}) {
         super(x, y);
-        this.width = width || 8;
-        this.height = height || 8;
-        this.color = bg;
+        this.width = width;
+        this.height = height;
         this.bg = bg;
     }
 
     getPixels() {
+        // fill the whole area with background so that we don't have to
+        // worry about previous frame artifacts
         return this.fillRect(0, 0, this.width, this.height, this.bg);
     }
 
     getAllPixels() {
-        // get all pixels push them by canvas' location as
-        let pixels = super.getAllPixels().map(p => ({x: p.x + this.x, y: p.y + this.y, color: p.color}));
-        pixels = pixels.filter(
-            p => p.x >= this.x && p.x < this.x + this.width && p.y >= this.y && p.y < this.y + this.height
-        );
+        // clip all pixels to canvas
+        let pixels = super.getAllPixels().map(pixel => ({
+            x: Math.round(pixel.x),
+            y: Math.round(pixel.y),
+            color: pixel.color,
+        }));
+        pixels = pixels.filter(p => p.x >= 0 && p.x < this.width && p.y >= 0 && p.y < this.height);
         return pixels;
     }
 }
 
-export class Rect extends Sprite {
-    constructor(x, y, width, height, color) {
-        super(x, y);
-        [this.width, this.height, this.color] = [width, height, color];
-    }
-
-    getPixels() {
-        return this.fillRect(0, 0, this.width, this.height, this.color);
-    }
+export class View extends Scene {
+    // while View behaves exactly like Scene right now, they might diverge in the future.
+    // semantically, Scene is the whole external screen, while View is a clipped fragment of that screen
 }
 
 // letters, vertical line by line in base 36

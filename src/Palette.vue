@@ -177,6 +177,8 @@
                 byIdx: Object.fromEntries(allColors.map(col => [col.idx, col])),
 
                 direction: 0,
+
+                canvas: null,
             };
         },
 
@@ -275,12 +277,10 @@
                     if (this.canvas.x == 4) {
                         this.canvas.x = 0;
                         this.canvas.width = 8;
-                        this.canvas.bg.width = 8;
                         this.mk2.panButton.toggled = true;
                     } else {
                         this.canvas.x = 4;
                         this.canvas.width = 4;
-                        this.canvas.bg.width = 4;
                         this.mk2.panButton.toggled = false;
 
                         this.mk2.select(0, 2, 3, 7).forEach(pad => {
@@ -289,39 +289,40 @@
                     }
                 } else if (evt.key == "fader0") {
                     this.direction = (evt.value / 127 - 0.5) * 0.5;
+                    console.log(this.direction);
                 }
             },
         },
 
         async mounted() {
-            let bananas = {};
-            let p = graphics.Point(23, 45);
-            bananas[p] = "red";
-            console.log("ttt", bananas);
+            let scene = new graphics.Scene({});
 
-            this.canvas = new graphics.PixelCanvas({x: 0, y: 0, width: 8, height: 8, bg: 0});
+            let container = new graphics.View({x: 0, y: 0, width: 8, height: 8, bg: "#666666"});
+            this.canvas = new graphics.View({x: 1, y: 2, width: 6, height: 5, bg: "#050505"});
 
-            this.label = new graphics.Sprite(1, 2);
-
+            this.label = new graphics.Sprite(0, 0);
+            // we add the labels one after the other so that we don't need to do the measuring
             this.label.addChild(new graphics.Text(0, 0, "R", "#ff0000"));
-            this.label.addChild(new graphics.Text(this.label.maxX + 2, 0, "G", "#00ff00"));
-            this.label.addChild(new graphics.Text(this.label.maxX + 2, 0, "B", "#0000ff"));
-            this.label.addChild(new graphics.Text(this.label.maxX + 4, 0, "Monster", "#ffffff"));
+            this.label.addChild(new graphics.Text(this.label.bounds.x + 2, 0, "G", "#00ff00"));
+            this.label.addChild(new graphics.Text(this.label.bounds.x + 2, 0, "B", "#0000ff"));
+            this.label.addChild(new graphics.Text(this.label.bounds.x + 4, 0, "Monster", "#ffffff"));
 
             this.canvas.addChild(this.label);
+            container.addChild(this.canvas);
+            scene.addChild(container);
 
             this.mk2 = new APCMiniMk2();
             await this.mk2.connect({
                 sysex: true,
                 beforePaint: () => {
                     this.label.x += this.direction;
-                    if (this.direction < 0 && this.label.x < -this.label.maxX - 2) {
+                    if (this.direction < 0 && this.label.x < -this.label.bounds.x - 2) {
                         this.label.x = 10;
                     } else if (this.direction > 0 && this.label.x > 10) {
-                        this.label.x = -this.label.maxX - 2;
+                        this.label.x = -this.label.bounds.x - 2;
                     }
 
-                    for (let pixel of this.canvas.getAllPixels()) {
+                    for (let pixel of scene.getAllPixels()) {
                         this.mk2.pads(pixel.x, pixel.y).color = pixel.color;
                     }
                 },
