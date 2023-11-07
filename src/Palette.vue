@@ -76,7 +76,7 @@
                 },
             },
 
-            getPixelStates() {
+            render() {
                 // here we generate everything that needs generating
             },
         },
