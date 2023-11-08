@@ -11,13 +11,21 @@ export class ColorPickState extends State {
         super();
         this.selectedCallback = selectedCallback;
         this.padColors = [];
+        this.mode = "colors";
+
         this.renderPadColors();
     }
 
     handlers = {
         noteon: evt => {
             if (evt.button.type == "rgb") {
-                this.selectedCallback(evt.button.color, evt);
+                if (this.mode == "colors") {
+                    this.mode = evt.button.color;
+                } else {
+                    this.mode = "colors";
+                    this.selectedCallback(evt.button.color, evt);
+                }
+                this.renderPadColors();
             }
         },
 
@@ -36,10 +44,17 @@ export class ColorPickState extends State {
         let padColors = [];
         let steps = 64;
 
+        let hue = this.mode == "colors" ? null : chroma(this.mode).hsl()[0];
+
         for (let idx = 0; idx < steps; idx++) {
-            let hue = (360 * idx) / steps;
-            let color = chroma.hsl(hue, 1, 0.5);
-            //let color = this.okLab(hue / 360);
+            let color;
+            if (this.mode == "colors") {
+                hue = (360 * idx) / steps;
+                color = chroma.hsl(hue, 1, 0.5);
+            } else {
+                // generate shades for the chose color
+                color = chroma.hsl(hue, 1, idx / steps);
+            }
 
             padColors.push({idx, color: color.hex()});
         }
@@ -56,6 +71,7 @@ export class PaintState extends State {
         super();
         this.currentColor = "#ffffff";
         this.pixelBoard = new graphics.PixelBoard();
+        this.mode = null;
 
         this.colorPicker = new ColorPickState((color, evt) => {
             this.currentColor = color || this.currentColor;
@@ -67,7 +83,13 @@ export class PaintState extends State {
         noteon: evt => {
             if (evt.button.type == "rgb") {
                 let [x, y] = [evt.button.x, evt.button.y];
-                this.pixelBoard.fill(x, y, this.pixelBoard.color(x, y) ? 0 : this.currentColor);
+
+                if (this.mode == "copy") {
+                    this.mode = null;
+                    this.currentColor = this.pixelBoard.color(x, y);
+                } else {
+                    this.pixelBoard.fill(x, y, this.currentColor);
+                }
             }
         },
 
@@ -75,6 +97,14 @@ export class PaintState extends State {
             toggled: true,
             noteon: evt => {
                 evt.mk2.setState(this.colorPicker);
+            },
+        },
+
+        select: {
+            toggled: true,
+            noteon: evt => {
+                this.mode = "copy";
+                //evt.mk2.shiftButton.blink(); // we don't have blink implemented just yet
             },
         },
     };
