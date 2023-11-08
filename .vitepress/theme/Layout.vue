@@ -11,6 +11,7 @@
 
     import {SnakeState} from "../../src/snake.js";
     import {PaintState} from "../../src/paint.js";
+    import {RainbowState} from "../../src/rainbow.js";
 
     export default {
         name: "LayoutBase",
@@ -24,6 +25,7 @@
                 states: {
                     paint: new PaintState(),
                     snake: new SnakeState(),
+                    rainbow: new RainbowState(),
                 },
             };
         },
@@ -33,7 +35,7 @@
                 let handlers = {
                     clipStop: () => this.mk2.setState(this.states.paint),
                     solo: () => this.mk2.setState(this.states.snake),
-                    mute: () => this.mk2.setState(this.states.paint),
+                    mute: () => this.mk2.setState(this.states.rainbow),
                 };
 
                 if (handlers[evt.key]) {
@@ -47,6 +49,10 @@
 
             await this.mk2.connect({sysex: true});
             this.mk2.setState(this.states.paint);
+
+            this.mk2.clipStopButton.toggled = true;
+            this.mk2.soloButton.toggled = true;
+            this.mk2.muteButton.toggled = true;
         },
 
         beforeUnmount() {

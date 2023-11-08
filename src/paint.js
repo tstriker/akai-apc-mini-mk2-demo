@@ -2,10 +2,6 @@ import chroma from "chroma-js";
 
 import {State, graphics} from "akai-apc-mini-mk2";
 
-function randint(max) {
-    return Math.floor(Math.random() * max);
-}
-
 export class ColorPickState extends State {
     constructor(selectedCallback) {
         super();
@@ -70,8 +66,10 @@ export class PaintState extends State {
     constructor() {
         super();
         this.currentColor = "#ffffff";
-        this.pixelBoard = new graphics.PixelBoard();
+        this.pixelBoard = graphics.Board2D();
         this.mode = null;
+        this.x = 0;
+        this.y = 0;
 
         this.colorPicker = new ColorPickState((color, evt) => {
             this.currentColor = color || this.currentColor;
@@ -83,12 +81,13 @@ export class PaintState extends State {
         noteon: evt => {
             if (evt.button.type == "rgb") {
                 let [x, y] = [evt.button.x, evt.button.y];
+                [x, y] = [x - this.x, y - this.y];
 
                 if (this.mode == "copy") {
                     this.mode = null;
-                    this.currentColor = this.pixelBoard.color(x, y);
+                    this.currentColor = this.pixelBoard(x - this.x, y - this.y).color || 0;
                 } else {
-                    this.pixelBoard.fill(x, y, this.currentColor);
+                    this.pixelBoard(x, y).color = this.currentColor;
                 }
             }
         },
@@ -107,9 +106,36 @@ export class PaintState extends State {
                 //evt.mk2.shiftButton.blink(); // we don't have blink implemented just yet
             },
         },
+
+        arrowUp: {
+            toggled: true,
+            noteon: () => (this.y += 1),
+        },
+        arrowDown: {
+            toggled: true,
+            noteon: () => (this.y -= 1),
+        },
+        arrowLeft: {
+            toggled: true,
+            noteon: () => (this.x += 1),
+        },
+        arrowRight: {
+            toggled: true,
+            noteon: () => (this.x -= 1),
+        },
     };
 
     render() {
-        return this.pixelBoard.getPixels();
+        let res = [];
+        let curColorDim = chroma.hsl(chroma(this.currentColor).hsl()[0], 1, 0.02).hex();
+
+        for (let y = 0; y < 8; y++) {
+            for (let x = 0; x < 8; x++) {
+                let color = this.pixelBoard(x - this.x, y - this.y)?.color || curColorDim;
+                res.push({x, y, color});
+            }
+        }
+        return res;
+        //return this.pixelBoard.pixels.map(pixel => ({...pixel, x: pixel.x + this.x, y: pixel.y + this.y}));
     }
 }

@@ -25,10 +25,22 @@ export class SnakeState extends State {
     }
 
     handlers = {
-        upButton: () => this.setDirection(0, -1),
-        downButton: () => this.setDirection(0, 1),
-        leftButton: () => this.setDirection(-1, 0),
-        rightButton: () => this.setDirection(1, 0),
+        arrowUp: {
+            toggled: true,
+            noteon: () => this.setDirection(0, -1),
+        },
+        arrowDown: {
+            toggled: true,
+            noteon: () => this.setDirection(0, 1),
+        },
+        arrowLeft: {
+            toggled: true,
+            noteon: () => this.setDirection(-1, 0),
+        },
+        arrowRight: {
+            toggled: true,
+            noteon: () => this.setDirection(1, 0),
+        },
     };
 
     placeFruit() {
