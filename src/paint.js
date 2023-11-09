@@ -67,7 +67,6 @@ export class PaintState extends State {
         super();
         this.currentColor = "#ffffff";
         this.pixelBoard = graphics.Board2D();
-        this.mode = null;
         this.x = 0;
         this.y = 0;
 
@@ -83,12 +82,13 @@ export class PaintState extends State {
                 let [x, y] = [evt.button.x, evt.button.y];
                 [x, y] = [x - this.x, y - this.y];
 
-                if (this.mode == "copy") {
-                    this.mode = null;
-                    this.currentColor = this.pixelBoard(x - this.x, y - this.y).color || 0;
-                } else {
-                    this.pixelBoard(x, y).color = this.currentColor;
+                if (evt.shiftKey) {
+                    console.log("Eeeeeeeeeeeeeeee we are here");
+                    this.currentColor = this.pixelBoard(x, y).color || 0;
+                    return;
                 }
+
+                this.pixelBoard(x, y).color = this.currentColor;
             }
         },
 
@@ -96,14 +96,6 @@ export class PaintState extends State {
             toggled: true,
             noteon: evt => {
                 evt.mk2.setState(this.colorPicker);
-            },
-        },
-
-        select: {
-            toggled: true,
-            noteon: evt => {
-                this.mode = "copy";
-                //evt.mk2.shiftButton.blink(); // we don't have blink implemented just yet
             },
         },
 

@@ -12,6 +12,7 @@
     import {SnakeState} from "../../src/snake.js";
     import {PaintState} from "../../src/paint.js";
     import {RainbowState} from "../../src/rainbow.js";
+    import Rain from "../../src/rain.js";
 
     export default {
         name: "LayoutBase",
@@ -22,11 +23,14 @@
         data() {
             return {
                 mk2: markRaw(new APCMiniMk2()),
-                states: {
+                states: markRaw({
                     paint: new PaintState(),
                     snake: new SnakeState(),
                     rainbow: new RainbowState(),
-                },
+                    rain: new Rain(),
+                }),
+
+                pixels: [],
             };
         },
 
@@ -36,6 +40,7 @@
                     clipStop: () => this.mk2.setState(this.states.paint),
                     solo: () => this.mk2.setState(this.states.snake),
                     mute: () => this.mk2.setState(this.states.rainbow),
+                    recArm: () => this.mk2.setState(this.states.rain),
                 };
 
                 if (handlers[evt.key]) {
@@ -47,7 +52,12 @@
         async mounted() {
             window.addEventListener("noteon", this.onNote);
 
-            await this.mk2.connect({sysex: true});
+            await this.mk2.connect({
+                sysex: true,
+                beforePaint: () => {
+                    this.pixels = this.mk2.pixels;
+                },
+            });
             this.mk2.setState(this.states.paint);
 
             this.mk2.clipStopButton.toggled = true;
@@ -66,14 +76,8 @@
     <div class="page-container">
         <h1>{{ site.title }}</h1>
 
-        <div class="links">
-            <a href="/palette.html">Palette</a>
-            <a href="/fill.html">Fill</a>
-            <a href="/rain.html">Rain</a>
-        </div>
-
         <div style="display: flex">
-            <APC />
+            <APC :pixels="pixels" />
         </div>
 
         <!-- <Content /> -->

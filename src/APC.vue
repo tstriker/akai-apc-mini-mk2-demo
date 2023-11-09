@@ -1,11 +1,13 @@
 <script>
-    import {APCMiniMk2, Colors, isRGB} from "akai-apc-mini-mk2";
-    import chroma from "chroma-js";
+    import {APCMiniMk2} from "akai-apc-mini-mk2";
 
     import utils from "./utils.js";
 
     export default {
         name: "APC",
+        props: {
+            pixels: Array,
+        },
         data() {
             return {
                 mk2: new APCMiniMk2(),
@@ -19,8 +21,7 @@
             };
         },
         computed: {
-            colorStyles: state =>
-                Object.fromEntries(Object.entries(state.colors).map(([key, val]) => [`--${key}`, val])),
+            colorStyles: state => Object.fromEntries(state.pixels.map(p => [`--${p.idx}`, p.color])),
             pads() {
                 return utils.range(64).map(i => {
                     let x = i % 8;
@@ -28,34 +29,6 @@
                     return this.mk2[`pad${x}${y}`];
                 });
             },
-        },
-
-        methods: {
-            onColor({note, value}) {
-                let color;
-                if (!value) {
-                    // pass
-                } else if (isRGB(value)) {
-                    color = value;
-                } else if (Array.isArray(value)) {
-                    color = Colors[value[0]];
-                } else {
-                    color = Colors[value] || value;
-                }
-
-                if (color == "#000000" || color === null) {
-                    color = "#333333";
-                }
-                this.colors[note] = color;
-            },
-        },
-
-        mounted() {
-            window.addEventListener("akai-apc-mini-mk2-stateupdate", this.onColor);
-        },
-
-        beforeUnmount() {
-            window.removeEventListener("akai-apc-mini-mk2-stateupdate", this.onColor);
         },
     };
 </script>
