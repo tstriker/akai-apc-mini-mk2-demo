@@ -1,12 +1,11 @@
 <script>
     import chroma from "chroma-js";
 
-    import APCMiniMk2 from "akai-apc-mini-mk2";
+    import {APCMiniMk2, graphics} from "akai-apc-mini-mk2";
     import {Colors} from "akai-apc-mini-mk2";
 
     import utils from "./utils.js";
     import APC from "./APC.vue";
-    import * as graphics from "./graphics.js";
 
     // this obviously works - finish it after you're done with the canvas
     class APCHandler {
